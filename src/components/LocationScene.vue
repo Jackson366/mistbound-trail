@@ -93,7 +93,11 @@ onMounted(() => {
 onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
 </script>
 <template>
-  <main id="location-view" aria-label="地点场景">
+  <main
+    id="location-view"
+    :class="{ 'has-conversation': !!conversation }"
+    aria-label="地点场景"
+  >
     <div class="scene-heading">
       <button ref="backButton" class="back-button" @click="leaveScene">
         ← 返回区域地图

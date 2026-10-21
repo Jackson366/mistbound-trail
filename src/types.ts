@@ -53,6 +53,7 @@ export interface GameState {
 export interface DialogueTurn {
   role: "npc" | "player";
   text: string;
+  notice?: string;
 }
 export interface ConversationMemory {
   node: "menu" | "topic0" | "topic1" | "receipt" | "end";

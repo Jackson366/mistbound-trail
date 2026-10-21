@@ -8,6 +8,7 @@ export interface DialogueChoice {
   label: string;
   detail?: string;
   paid?: boolean;
+  utterance?: string;
 }
 function available(s: GameState, pointId: string) {
   return (
@@ -56,6 +57,7 @@ export function conversationView(s: GameState, pointId: string) {
         label: "买四份补给",
         detail: "支付 3 金币 · 获得 4 补给",
         paid: true,
+        utterance: "我买四份补给。",
       });
     character.topics.forEach(([label], i) =>
       choices.push({
@@ -68,6 +70,8 @@ export function conversationView(s: GameState, pointId: string) {
     choices.push({
       id: "menu",
       label: id === "0:mara" ? "再看看补给与回程" : "我还想问一件事",
+      utterance:
+        id === "0:mara" ? "我再看看补给，也想问问回程。" : "我还想问一件事。",
     });
   }
   if (memory.node !== "end") choices.push({ id: "leave", label: "先聊到这里" });
@@ -93,15 +97,19 @@ export function chooseDialogue(
   const choice = view.choices.find((c) => c.id === choiceId);
   if (!choice) return { ok: false, message: "请选择当前对话中的选项。" };
   const { memory: m, character: c, id } = view;
+  // Preserve a receipt from saves made before turn-level notices were added.
+  const previousTurn = m.history.at(-1);
+  if (previousTurn && m.notice && previousTurn.notice === undefined)
+    previousTurn.notice = m.notice;
   m.revision++;
   m.notice = "";
-  append(m, "player", choice.label);
+  append(m, "player", choice.utterance ?? choice.label);
   if (choiceId === "leave") {
     m.node = "end";
     append(m, "npc", c.goodbye);
   } else if (choiceId === "menu") {
     m.node = "menu";
-    append(m, "npc", openingFor(s, id, true));
+    append(m, "npc", c.followUp);
   } else if (choiceId === "buy") {
     const result = act(s, "buy");
     if (result.ok) {
@@ -123,5 +131,8 @@ export function chooseDialogue(
     }
     append(m, "npc", c.topics[index][1]);
   }
+  // Keep receipts attached to their original turn when later replies arrive.
+  const lastTurn = m.history.at(-1);
+  if (lastTurn && m.notice) lastTurn.notice = m.notice;
   return { ok: true, message: m.notice };
 }

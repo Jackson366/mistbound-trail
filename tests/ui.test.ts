@@ -128,12 +128,17 @@ test("Vue conversation purchase, interruption and reload preserve the exact repl
     wrapper.get(".conversation-notice").text(),
     /金币 −3 · 补给 \+4/,
   );
-  assert.equal(win.document.activeElement?.className, "conversation-reply");
-  assert.equal(wrapper.findAll(".dialogue-choice").length, 2);
-  assert.equal(
-    wrapper.get(".conversation-history").attributes("open"),
-    undefined,
+  assert.ok(
+    win.document.activeElement?.classList.contains("conversation-reply"),
   );
+  assert.equal(wrapper.findAll(".dialogue-choice").length, 2);
+  assert.equal(wrapper.findAll(".recent-thread .chat-turn").length, 3);
+  assert.equal(wrapper.findAll(".recent-thread .player-turn").length, 1);
+  assert.equal(
+    wrapper.get(".player-turn .chat-bubble").text(),
+    "我买四份补给。",
+  );
+  assert.equal(wrapper.findAll(".conversation-history").length, 0);
   const reply = wrapper.get(".conversation-reply").text();
   await clickText(wrapper, "地点介绍");
   await clickText(wrapper, "向玛拉购买补给");
@@ -155,6 +160,60 @@ test("Vue conversation purchase, interruption and reload preserve the exact repl
   await flushPromises();
   await clickText(wrapper, "再聊几句");
   assert.match(wrapper.get(".conversation-reply").text(), /又见面了/);
+  wrapper.unmount();
+});
+test("bubble conversation keeps ordered turns and receipts, expands earlier exchanges, and isolates NPC histories", async () => {
+  win.localStorage.clear();
+  const wrapper = mount(App, { attachTo: win.document.body });
+  await clickText(wrapper, "进入地点场景 ↗");
+  await clickText(wrapper, "向玛拉购买补给");
+  async function choose(label: string) {
+    const button = wrapper
+      .findAll(".dialogue-choice")
+      .find((b) => b.text().includes(label));
+    assert.ok(button);
+    await button.trigger("click");
+    await flushPromises();
+  }
+  await choose("买四份补给");
+  await choose("再看看补给与回程");
+  assert.equal(wrapper.findAll(".recent-thread .chat-turn").length, 5);
+  assert.match(
+    wrapper.get(".recent-thread .conversation-notice").text(),
+    /交易完成/,
+  );
+  await choose("回程该留多少");
+  assert.equal(wrapper.findAll(".recent-thread .chat-turn").length, 5);
+  assert.equal(
+    wrapper.get(".conversation-history").attributes("open"),
+    undefined,
+  );
+  assert.equal(wrapper.findAll(".conversation-history .chat-turn").length, 2);
+  await wrapper.get(".conversation-history summary").trigger("click");
+  assert.equal(wrapper.get(".conversation-history").attributes("open"), "");
+  assert.match(
+    wrapper
+      .get(".recent-thread .conversation-reply .conversation-notice")
+      .text(),
+    /归途的补给/,
+  );
+  assert.equal(wrapper.findAll(".conversation-reply").length, 1);
+  const turns = wrapper
+    .findAll(".recent-thread .chat-turn")
+    .map((t) => (t.classes().includes("player-turn") ? "player" : "npc"));
+  assert.deepEqual(turns, ["npc", "player", "npc", "player", "npc"]);
+  const oren = wrapper
+    .findAll(".scene-hotspot")
+    .find((b) => b.text().includes("奥伦"))!;
+  await oren.trigger("click");
+  await flushPromises();
+  assert.equal(wrapper.findAll(".recent-thread .chat-turn").length, 1);
+  assert.doesNotMatch(wrapper.get(".conversation-thread").text(), /交易完成/);
+  await clickText(wrapper, "向玛拉购买补给");
+  assert.equal(wrapper.findAll(".recent-thread .chat-turn").length, 5);
+  assert.match(wrapper.get(".recent-thread").text(), /交易完成/);
+  assert.match(wrapper.get(".conversation-history").text(), /我买四份补给/);
+  assert.doesNotMatch(wrapper.get(".recent-thread").text(), /又见面了/);
   wrapper.unmount();
 });
 test("Vue dialog cancels reset and movement opens the selected destination scene", async () => {

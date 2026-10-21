@@ -5,11 +5,13 @@ interface Character {
   role: string;
   opening: string;
   returning: string;
+  followUp: string;
   goodbye: string;
   topics: [label: string, reply: string][];
 }
 export const characters: Record<string, Character> = {
   "0:mara": {
+    followUp: "干粮还是三枚金币换四份。你还要补给，还是问问回程？",
     name: "玛拉",
     role: "鹿灯酒馆掌柜",
     opening: "路上的干粮备齐了吗？三枚金币能换四份。你要补给，还是想问问回程？",
@@ -23,6 +25,7 @@ export const characters: Record<string, Character> = {
     ],
   },
   "0:cartographer": {
+    followUp: "我们接着看这张图。要确认印记位置，还是归程？",
     name: "奥伦",
     role: "制图师",
     opening: "这张图上缺了三处星光。你想先问印记的位置，还是找到之后该怎么做？",
@@ -40,6 +43,7 @@ export const characters: Record<string, Character> = {
     ],
   },
   "0:courier": {
+    followUp: "信还在这儿。接着问学者，还是那封信？",
     name: "信使",
     role: "刚从孤塔归来",
     opening: "你也要往无灯孤塔去？想听学者的习惯，还是问这封信？",
@@ -57,6 +61,7 @@ export const characters: Record<string, Character> = {
     ],
   },
   "9:monk": {
+    followUp: "名册和彩窗都在。你想接着问哪一个？",
     name: "塞恩",
     role: "白枝修道院修士",
     opening: "坐一会儿吧。你想看看名册，还是问彩窗上缺掉的星瓣？",
@@ -74,6 +79,7 @@ export const characters: Record<string, Character> = {
     ],
   },
   "14:captain": {
+    followUp: "你还想问过关的规矩，还是旧旗？",
     name: "蕾雅",
     role: "暮色守卫队长",
     opening: "路还通着。你要问关口的规矩，还是旧王的旗？",
@@ -91,6 +97,7 @@ export const characters: Record<string, Character> = {
     ],
   },
   "16:scholar": {
+    followUp: "说回书室里的事。你想问印记，还是暗处的墨迹？",
     name: "维恩",
     role: "星图学者",
     opening: "别挪那本书，月光正落在页边。你想问印记，还是这些不点灯的书？",
@@ -108,6 +115,7 @@ export const characters: Record<string, Character> = {
     ],
   },
   "18:hunter": {
+    followUp: "先别急着走。要再认认路标，还是聊扎营？",
     name: "艾达",
     role: "边境猎人",
     opening: "别踩火塘边的细草。你想认路标，还是问在野外怎么歇脚？",

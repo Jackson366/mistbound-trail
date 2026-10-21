@@ -55,6 +55,25 @@ test("supply purchase uses engine prices, rejects stale clicks and requires reop
   assert.equal(s.gold, 12);
   assert.equal(s.food, 18);
 });
+test("receipts stay on their original NPC turn after follow-up questions and reloading", () => {
+  const s = create(33);
+  beginConversation(s, "mara");
+  choose(s, "mara", "buy");
+  const receipt = s.conversations!["0:mara"].history.at(-1)!;
+  assert.match(receipt.notice!, /金币 −3 · 补给 \+4/);
+  // A previous version stored this receipt only on memory.notice.
+  delete receipt.notice;
+  assert.ok(validate(s));
+  choose(s, "mara", "menu");
+  choose(s, "mara", "topic0");
+  const restored = JSON.parse(JSON.stringify(s)) as GameState;
+  assert.ok(validate(restored));
+  const history = restored.conversations!["0:mara"].history;
+  assert.equal(history.filter((t) => t.notice?.includes("交易完成")).length, 1);
+  assert.match(history.at(-1)!.notice!, /归途的补给/);
+  history[0].notice = 500 as unknown as string;
+  assert.equal(validate(restored), false);
+});
 test("insufficient gold explains the shortage, charges nothing and keeps a free topic and exit", () => {
   const s = create(2);
   s.gold = 1;

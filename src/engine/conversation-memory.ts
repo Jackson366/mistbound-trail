@@ -43,7 +43,9 @@ export function validConversations(value: unknown): boolean {
             (t.role === "npc" || t.role === "player") &&
             typeof t.text === "string" &&
             t.text.length > 0 &&
-            t.text.length < 500,
+            t.text.length < 500 &&
+            (t.notice === undefined ||
+              (typeof t.notice === "string" && t.notice.length < 500)),
         )
       );
     })
