@@ -71,18 +71,27 @@ test("Vue UI renders map, enters a scene, inspects lore and returns without losi
   win.localStorage.clear();
   const wrapper = mount(App, { attachTo: win.document.body });
   assert.equal(wrapper.findAll(".hex").length, 19);
+  assert.equal(wrapper.findAll('[aria-label="角色状态"]').length, 1);
+  assert.equal(wrapper.findAll(".location-panel .button.primary").length, 1);
+  assert.equal(wrapper.findAll(".location-panel .button").length, 1);
   await clickText(wrapper, "进入地点场景 ↗");
   assert.ok(wrapper.find("#location-view").exists());
   assert.equal(wrapper.findAll(".scene-hotspot").length, 5);
+  assert.equal(wrapper.findAll('[aria-label="角色状态"]').length, 1);
+  assert.equal(wrapper.get(".scene-object-list").attributes("open"), undefined);
+  assert.equal(wrapper.get(".scene-clues").attributes("open"), undefined);
   assert.ok(wrapper.find("#stage-art svg").exists());
   const point = wrapper
-    .findAll(".point-action")
+    .findAll(".scene-hotspot")
     .find((b) => b.text().includes("玛拉"));
   assert.ok(point);
   await point.trigger("click");
   assert.match(wrapper.find(".observation").text(), /热汤与远路/);
+  assert.equal(wrapper.findAll(".scene-prose").length, 0);
+  await clickText(wrapper, "地点介绍");
+  assert.equal(wrapper.findAll(".scene-prose").length, 2);
   assert.equal(wrapper.findAll(".clue-row").length, 1);
-  await clickText(wrapper, "远征手记");
+  await clickText(wrapper, "手记");
   assert.equal(wrapper.get("dialog").attributes("open"), "");
   assert.match(wrapper.get("dialog").text(), /归途的补给/);
   await clickText(wrapper, "×");
@@ -98,14 +107,14 @@ test("Vue UI renders map, enters a scene, inspects lore and returns without losi
 test("Vue dialog cancels reset and movement opens the selected destination scene", async () => {
   win.localStorage.clear();
   const wrapper = mount(App, { attachTo: win.document.body });
-  await clickText(wrapper, "↻新旅程");
+  await clickText(wrapper, "新旅程");
   await clickText(wrapper, "保留当前旅程");
   assert.equal(wrapper.get("dialog").attributes("open"), undefined);
   const tiles = wrapper.findAll(".hex");
   await tiles[1].trigger("click");
   await clickText(wrapper, "前往此地 →");
-  assert.match(wrapper.find(".scene-caption").text(), /灰松林/);
+  assert.match(wrapper.find(".scene-heading").text(), /灰松林/);
   assert.equal(wrapper.findAll(".scene-hotspot").length, 3);
-  assert.match(wrapper.find(".stage-resources").text(), /9补给/);
+  assert.match(wrapper.find(".resources").text(), /补给9/);
   wrapper.unmount();
 });

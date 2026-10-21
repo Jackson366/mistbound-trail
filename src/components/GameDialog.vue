@@ -61,7 +61,7 @@ watch(dialog, async (kind, previous) => {
     else
       document
         .querySelector<HTMLButtonElement>(
-          sceneOpen.value ? ".stage-toolbar button" : ".rail-item",
+          sceneOpen.value ? ".back-button" : ".utility-nav button",
         )
         ?.focus();
   }

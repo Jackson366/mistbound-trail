@@ -26,7 +26,7 @@ typography:
 rounded:
   DEFAULT: "8px"
 spacing:
-  panel: "28px"
+  panel: "24px"
 components:
   button:
     rounded: "{rounded.DEFAULT}"
@@ -54,9 +54,11 @@ Chinese serif display titles evoke a travel journal; Chinese sans body remains r
 
 ## Layout
 
-Desktop: 80px tool rail, flexible central map/journal, 330px location panel. Below 1100px the rail becomes a labeled horizontal toolbar. Below 800px location details follow the map in document flow. Map scales at a fixed aspect ratio; document owns scrolling.
+Both views share one header and one compact resource bar. The header owns journal, inventory, help and new expedition. Maximum content width is 1360px, horizontal padding 32px desktop / 16px phone, with 24–32px between major groups. Body uses 12–15px, section headings 17px, scene/page headings 23–28px. Color, weight and whitespace establish hierarchy; no promotional hero, left navigation rail or repeated journal/quest panels.
 
-Location mode: artwork and semantic HTML hotspots fill the flexible left stage; a 350px story column contains objective, observations and collected clues. A bottom action tray duplicates every hotspot for keyboard/touch access. Below 850px the narrative moves beneath the stage; below 520px the action tray wraps into large labeled controls. The scene canvas preserves 12:7 coordinates, preventing hotspot drift. Scene panels retain independent overflow only on desktop.
+Map: flexible map + fixed 300px location column, reduced to 280px before stacking below 800px. Selected location shows one primary action: enter current place or move to an adjacent tile, with cost/reason directly beneath. Investigation, buying supplies and rest belong only to the scene. Mobile hides the secondary preview illustration and retains concise text and the primary button. The document owns scrolling.
+
+Scene: artwork + 300px narrative column. Global resource bar replaces per-scene duplicate counters. The title and Back to map are outside the artwork. Native HTML hotspots stay at the original 12:7 coordinates. The optional duplicate object list is collapsed by default in a native details disclosure; the scene footer owns one primary investigation/buy action plus secondary rest, and shows cost before the action. The right column switches between introduction and selected observation rather than appending multiple panels. Clues are collapsed by default and use the same observation handler. Below 800px columns stack; choosing a point scrolls its result into view. There are no nested page scroll areas.
 
 ## Elevation & Depth
 
@@ -68,14 +70,15 @@ Pointed hexagons belong only to the map. Buttons and dialogs use 8px corners. Na
 
 ## Components
 
-One button primitive for primary, secondary and ghost; disabled states reduce contrast and include reasons in adjacent text. One native dialog owner for help, pack, journal, reset and endings, with showModal focus containment, Escape and restored focus. One live status owner communicates actions and save failures. No loading state: the entire game runs locally synchronously. No server or external API.
+One button primitive for primary and secondary; utilities are tertiary text buttons; disabled states reduce contrast and include reasons in adjacent text. One native dialog owner for help, pack, journal, reset and endings, with showModal focus containment, Escape and restored focus. One live status owner communicates actions and save failures. No loading state: the entire game runs locally synchronously. No server or external API.
 
 Iconography uses original inline line drawings. Hover brightens controls; focus has a 2px brass ring. No ambient animation. Reduced motion disables transitions. All action labels are Chinese. Map buttons include coordinates and location names in accessible labels.
 
-Scene artwork is owned by src/rendering/scene-art.ts; authored people and clues by src/data/locations.ts; scene transitions and focus by src/composables/useGame.ts. Hotspot, action-tray and clue-recap buttons invoke the same observePoint handler. Scenery has no network or image dependencies.
+Scene artwork is owned by src/rendering/scene-art.ts; authored people and clues by src/data/locations.ts; scene transitions and focus by src/composables/useGame.ts. Hotspot, collapsed object-list and clue-recap buttons invoke the same observePoint handler. GameObjective.vue is shared by map and scene. Native details/summary owns disclosure keyboard semantics; dialogs remain in GameDialog.vue. Scenery has no network or image dependencies.
 
 ## Do's and Don'ts
 
+- Do show only one primary action per work area and keep resource costs next to it.
 - Do make movement cost visible before moving.
 - Do keep exploration and movement separate actions.
 - Don't reveal hidden contents before reaching a location.

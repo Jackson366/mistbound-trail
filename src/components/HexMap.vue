@@ -43,18 +43,14 @@ onMounted(() => {
 onBeforeUnmount(() => observer?.disconnect());
 </script>
 <template>
-  <section class="map-panel" aria-labelledby="map-title">
+  <section class="map-panel" aria-label="灰松谷区域地图">
     <div class="map-heading">
-      <div>
-        <span class="tiny-label">区域地图</span>
-        <h2 id="map-title">灰松谷 <span>THE GREYPINE</span></h2>
-      </div>
-      <span class="map-count"
+      <span>点击地块查看详情</span
+      ><span class="map-count"
         >已发现 {{ state.tiles.filter((t) => t.visible).length }} / 19</span
       >
     </div>
     <div ref="stage" class="map-stage">
-      <div class="map-watermark">北境勘探局 · 未完全测绘</div>
       <div class="compass" aria-hidden="true"><span>N</span>✥</div>
       <div id="map" :style="mapStyle" aria-label="十九格六角地图">
         <button
@@ -84,13 +80,11 @@ onBeforeUnmount(() => observer?.disconnect());
         </button>
       </div>
       <div class="map-scale"><i /><span>每格约 2 英里</span></div>
-      <div class="map-flavor">未知之地，静候足迹。</div>
     </div>
     <div class="map-legend">
       <span><i class="legend-current" />你的位置</span
       ><span><i class="legend-known" />已发现</span
-      ><span><i class="legend-fog" />迷雾</span
-      ><span class="legend-hint">点击地块查看详情</span>
+      ><span><i class="legend-fog" />迷雾</span>
     </div>
   </section>
 </template>

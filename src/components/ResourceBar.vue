@@ -3,33 +3,25 @@ import { useGame } from "../composables/useGame";
 const { state } = useGame();
 </script>
 <template>
-  <section class="resources" aria-label="角色状态">
-    <div>
-      <span class="resource-icon hp-icon">♡</span
-      ><span
-        ><small>生命</small><b>{{ state.hp }} / 12</b></span
-      >
-      <div class="health-track">
-        <i :style="{ width: (state.hp / 12) * 100 + '%' }" />
-      </div>
+  <dl class="resources" aria-label="角色状态">
+    <div :class="{ critical: state.hp <= 4 }">
+      <dt><span aria-hidden="true">♡</span>生命</dt>
+      <dd>
+        {{ state.hp }}<small> / 12</small
+        ><span v-if="state.hp <= 4" class="sr-only">，生命偏低</span>
+      </dd>
+    </div>
+    <div :class="{ critical: state.food === 0 }">
+      <dt><span aria-hidden="true">♧</span>补给</dt>
+      <dd>{{ state.food }}<small> 份</small></dd>
     </div>
     <div>
-      <span class="resource-icon">♧</span
-      ><span
-        ><small>补给</small><b>{{ state.food }} 份</b></span
-      >
+      <dt><span aria-hidden="true">◈</span>金币</dt>
+      <dd>{{ state.gold }}</dd>
     </div>
     <div>
-      <span class="resource-icon gold-icon">◈</span
-      ><span
-        ><small>金币</small><b>{{ state.gold }}</b></span
-      >
+      <dt><span aria-hidden="true">✧</span>印记</dt>
+      <dd>{{ state.sigils }}<small> / 3</small></dd>
     </div>
-    <div>
-      <span class="resource-icon">✧</span
-      ><span
-        ><small>古代印记</small><b>{{ state.sigils }} / 3</b></span
-      >
-    </div>
-  </section>
+  </dl>
 </template>
