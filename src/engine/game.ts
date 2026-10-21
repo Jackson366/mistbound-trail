@@ -1,3 +1,4 @@
+import { validConversations } from "./conversation-memory";
 import type {
   Action,
   ActionResult,
@@ -324,6 +325,12 @@ export function act(
   return { ok: true, message };
 }
 export function validate(value: unknown): value is GameState {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !validConversations((value as GameState).conversations)
+  )
+    return false;
   if (!value || typeof value !== "object") return false;
   const s = value as GameState;
   if (

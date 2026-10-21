@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { JSDOM } from "jsdom";
 import type { Component } from "vue";
+import { create } from "../src/engine/game";
 // In-memory DOM tests: no browser, preview server or network navigation.
 const dom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "https://mistbound.test/",
@@ -86,7 +87,15 @@ test("Vue UI renders map, enters a scene, inspects lore and returns without losi
     .find((b) => b.text().includes("玛拉"));
   assert.ok(point);
   await point.trigger("click");
-  assert.match(wrapper.find(".observation").text(), /热汤与远路/);
+  assert.match(wrapper.find(".conversation").text(), /玛拉/);
+  assert.equal(wrapper.findAll(".dialogue-choice").length, 3);
+  assert.equal(wrapper.findAll(".clue-row").length, 0);
+  await wrapper
+    .findAll(".dialogue-choice")
+    .find((b) => b.text().includes("回程该留多少"))!
+    .trigger("click");
+  await flushPromises();
+  assert.match(wrapper.get(".conversation-notice").text(), /归途的补给/);
   assert.equal(wrapper.findAll(".scene-prose").length, 0);
   await clickText(wrapper, "地点介绍");
   assert.equal(wrapper.findAll(".scene-prose").length, 2);
@@ -104,6 +113,50 @@ test("Vue UI renders map, enters a scene, inspects lore and returns without losi
   assert.equal(saved.food, 10);
   wrapper.unmount();
 });
+test("Vue conversation purchase, interruption and reload preserve the exact reply and costs", async () => {
+  win.localStorage.clear();
+  let wrapper = mount(App, { attachTo: win.document.body });
+  await clickText(wrapper, "进入地点场景 ↗");
+  await clickText(wrapper, "向玛拉购买补给");
+  const buy = wrapper
+    .findAll(".dialogue-choice")
+    .find((b) => b.text().includes("买四份补给"))!;
+  assert.match(buy.text(), /3 金币.*4 补给/);
+  await buy.trigger("click");
+  await flushPromises();
+  assert.match(
+    wrapper.get(".conversation-notice").text(),
+    /金币 −3 · 补给 \+4/,
+  );
+  assert.equal(win.document.activeElement?.className, "conversation-reply");
+  assert.equal(wrapper.findAll(".dialogue-choice").length, 2);
+  assert.equal(
+    wrapper.get(".conversation-history").attributes("open"),
+    undefined,
+  );
+  const reply = wrapper.get(".conversation-reply").text();
+  await clickText(wrapper, "地点介绍");
+  await clickText(wrapper, "向玛拉购买补给");
+  assert.equal(wrapper.get(".conversation-reply").text(), reply);
+  wrapper.unmount();
+  wrapper = mount(App, { attachTo: win.document.body });
+  await clickText(wrapper, "进入地点场景 ↗");
+  await clickText(wrapper, "向玛拉购买补给");
+  assert.equal(wrapper.get(".conversation-reply").text(), reply);
+  const saved = JSON.parse(
+    win.localStorage.getItem("mistbound-expedition-v1")!,
+  );
+  assert.equal(saved.food, 14);
+  assert.equal(saved.gold, 15);
+  await wrapper
+    .findAll(".dialogue-choice")
+    .find((b) => b.text().includes("先聊到这里"))!
+    .trigger("click");
+  await flushPromises();
+  await clickText(wrapper, "再聊几句");
+  assert.match(wrapper.get(".conversation-reply").text(), /又见面了/);
+  wrapper.unmount();
+});
 test("Vue dialog cancels reset and movement opens the selected destination scene", async () => {
   win.localStorage.clear();
   const wrapper = mount(App, { attachTo: win.document.body });
@@ -116,5 +169,40 @@ test("Vue dialog cancels reset and movement opens the selected destination scene
   assert.match(wrapper.find(".scene-heading").text(), /灰松林/);
   assert.equal(wrapper.findAll(".scene-hotspot").length, 3);
   assert.match(wrapper.find(".resources").text(), /补给9/);
+  wrapper.unmount();
+});
+test("Vue dialogue shortage stays inline, retains an exit and supports scene shortcuts without firing during composition", async () => {
+  const s = create(17);
+  s.gold = 1;
+  win.localStorage.setItem("mistbound-expedition-v1", JSON.stringify(s));
+  const wrapper = mount(App, { attachTo: win.document.body });
+  await clickText(wrapper, "进入地点场景 ↗");
+  win.dispatchEvent(
+    new win.KeyboardEvent("keydown", { key: "1", isComposing: true }),
+  );
+  await flushPromises();
+  assert.equal(wrapper.findAll(".conversation").length, 0);
+  win.dispatchEvent(new win.KeyboardEvent("keydown", { key: "1" }));
+  await flushPromises();
+  const buy = wrapper
+    .findAll(".dialogue-choice")
+    .find((b) => b.text().includes("买四份补给"))!;
+  await buy.trigger("click");
+  await flushPromises();
+  assert.match(
+    wrapper.get(".conversation-notice").text(),
+    /还差 2 金币，未扣款/,
+  );
+  assert.equal(wrapper.findAll(".dialogue-choice").length, 3);
+  const saved = JSON.parse(
+    win.localStorage.getItem("mistbound-expedition-v1")!,
+  );
+  assert.equal(saved.gold, 1);
+  assert.equal(saved.food, 10);
+  assert.ok(
+    wrapper
+      .findAll(".dialogue-choice")
+      .some((b) => b.text().includes("先聊到这里")),
+  );
   wrapper.unmount();
 });

@@ -11,6 +11,7 @@ import { useGame } from "../composables/useGame";
 import { key } from "../data/locations";
 import SceneArt from "./SceneArt.vue";
 import GameObjective from "./GameObjective.vue";
+import ConversationPanel from "./ConversationPanel.vue";
 const {
   state,
   here: tile,
@@ -21,6 +22,7 @@ const {
   dialog,
   localClues,
   observation,
+  conversation,
   leaveScene,
   observePoint,
   explore,
@@ -179,10 +181,10 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
                 {{ state.hp === 12 ? "生命已满" : "休整 · 2 时段" }}</button
               ><button
                 class="button primary"
-                :disabled="!playing || state.gold < 3"
-                @click="perform('buy')"
+                :disabled="!playing"
+                @click="observePoint('mara')"
               >
-                补充干粮 · 3 金币
+                向玛拉购买补给
               </button></template
             ><template v-else
               ><button
@@ -217,12 +219,15 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
     <aside class="scene-story-panel" aria-label="场景见闻与线索">
       <section ref="observationPanel" class="scene-narrative">
         <div class="section-title">
-          <span>{{ observation ? "查看结果" : "地点见闻" }}</span
+          <span>{{
+            conversation ? "人物交谈" : observation ? "查看结果" : "地点见闻"
+          }}</span
           ><button v-if="observation" class="text-button" @click="showIntro">
             地点介绍
           </button>
         </div>
-        <article v-if="observation" class="observation" aria-live="polite">
+        <ConversationPanel v-if="conversation" :key="conversation.id" />
+        <article v-else-if="observation" class="observation" aria-live="polite">
           <span class="observation-type">{{ observation.label }}</span>
           <h2>{{ observation.title }}</h2>
           <p>{{ observation.text }}</p>

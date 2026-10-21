@@ -47,7 +47,19 @@ export interface GameState {
   status: "playing" | "won" | "lost";
   pending: number | null;
   discoveries?: string[];
+  conversations?: Record<string, ConversationMemory>;
   logs: LogEntry[];
+}
+export interface DialogueTurn {
+  role: "npc" | "player";
+  text: string;
+}
+export interface ConversationMemory {
+  node: "menu" | "topic0" | "topic1" | "receipt" | "end";
+  revision: number;
+  topics: number[];
+  history: DialogueTurn[];
+  notice: string;
 }
 export interface ActionResult {
   ok: boolean;

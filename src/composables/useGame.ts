@@ -10,6 +10,7 @@ import {
 } from "vue";
 import * as engine from "../engine/game";
 import * as locations from "../data/locations";
+import * as conversations from "../engine/conversation";
 import {
   loadGame,
   saveGame,
@@ -58,6 +59,11 @@ export function createGameController(storage?: SaveStorage) {
     place.value.points.find((p) => p.id === activePoint.value),
   );
   const playing = computed(() => state.value.status === "playing");
+  const conversation = computed(() =>
+    activePoint.value && observation.value?.kind === "talk"
+      ? conversations.conversationView(state.value, activePoint.value)
+      : null,
+  );
   function announce(message: string) {
     toast.value = message;
     clearTimeout(timer);
@@ -103,6 +109,21 @@ export function createGameController(storage?: SaveStorage) {
   function observePoint(id: string) {
     if (!place.value.points.some((p) => p.id === id)) return;
     if (
+      place.value.points.find((p) => p.id === id)?.kind === "talk" &&
+      playing.value &&
+      state.value.pending === null
+    ) {
+      if (conflict) {
+        announce("另一页面更改了存档，请刷新后继续。");
+        return;
+      }
+      if (conversations.beginConversation(state.value, id)) {
+        activePoint.value = id;
+        persist();
+      }
+      return;
+    }
+    if (
       (state.value.discoveries || []).includes(
         locations.key(state.value.position, id),
       )
@@ -123,6 +144,21 @@ export function createGameController(storage?: SaveStorage) {
     if (observation.fresh) persist();
     if (observation.fresh && observation.point.clue)
       announce("已记录线索：" + observation.point.clue);
+  }
+  function chooseDialogue(choiceId: string, revision: number) {
+    if (conflict) {
+      announce("另一页面更改了存档，请刷新后继续。");
+      return;
+    }
+    if (!activePoint.value) return;
+    const outcome = conversations.chooseDialogue(
+      state.value,
+      activePoint.value,
+      choiceId,
+      revision,
+    );
+    if (outcome.ok) persist();
+    else announce(outcome.message);
   }
   function resolveEncounter(mode: ResolveMode) {
     if (conflict) {
@@ -182,6 +218,7 @@ export function createGameController(storage?: SaveStorage) {
     allClues,
     localClues,
     observation,
+    conversation,
     playing,
     announce,
     persist,
@@ -191,6 +228,7 @@ export function createGameController(storage?: SaveStorage) {
     perform,
     explore,
     observePoint,
+    chooseDialogue,
     resolveEncounter,
     continueJourney,
     newExpedition,

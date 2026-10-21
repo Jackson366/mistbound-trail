@@ -816,6 +816,105 @@ kbd {
   font-size: 10px;
   color: var(--scene-muted);
 }
+.conversation-person {
+  margin-bottom: 20px;
+}
+.conversation-person h2 {
+  font: 24px/1.4 var(--display);
+  margin: 0 0 4px;
+}
+.conversation-person > span,
+.dialogue-cue,
+.dialogue-help {
+  color: var(--scene-muted);
+  font-size: 12px;
+}
+.conversation-reply {
+  scroll-margin: 24px;
+}
+.conversation-reply > p:first-child {
+  font: 16px/1.9 var(--display);
+  color: var(--scene-text);
+  margin: 0 0 24px;
+}
+.conversation-reply:focus-visible {
+  outline: 2px solid var(--scene-accent);
+  outline-offset: 6px;
+}
+.conversation-notice {
+  border-left: 2px solid var(--scene-accent);
+  padding: 8px 12px;
+  margin: 0 0 24px;
+  color: var(--scene-accent);
+  font: 13px/1.7 var(--body);
+}
+.dialogue-choices,
+.encounter-choices {
+  display: grid;
+  gap: 8px;
+}
+.dialogue-cue {
+  margin-bottom: 4px;
+}
+.dialogue-choice {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid var(--scene-border);
+  border-radius: 8px;
+  background: var(--scene-panel);
+  color: var(--scene-text);
+  font: 14px/1.6 var(--body);
+}
+.dialogue-choice > span {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+.dialogue-choice small {
+  display: block;
+  color: var(--scene-muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.dialogue-choice:hover:not(:disabled) {
+  border-color: var(--scene-accent);
+  background: var(--scene-border);
+}
+.paid-choice {
+  border-color: var(--scene-accent);
+}
+.leave-choice {
+  border-color: transparent;
+  background: transparent;
+  color: var(--scene-muted);
+}
+.dialogue-help {
+  font-size: 11px;
+  line-height: 1.7;
+  margin-top: 4px;
+}
+.conversation-history {
+  border-top: 1px solid var(--scene-border);
+  margin-top: 24px;
+  padding-top: 8px;
+  font-size: 12px;
+  color: var(--scene-muted);
+}
+.conversation-history summary {
+  padding: 8px 0;
+}
+.conversation-history p {
+  margin: 12px 0;
+  line-height: 1.8;
+}
+.conversation-history small {
+  display: block;
+  color: var(--scene-accent);
+  margin-bottom: 2px;
+}
 .clue-found {
   font-size: 11px;
   line-height: 1.8;

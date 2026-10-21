@@ -100,7 +100,7 @@ function nativeClose() {
       <h3>地点场景</h3>
       <p>
         到达地点后，点击人物或物件查看见闻，也可使用底部同名按钮或数字键
-        1–5。交谈与查看免费，不会发放物资。正式调查按按钮标注消耗时段。
+        1–5。人物会提供对话选项，暂时离开后可以续聊。交谈与查看不消耗时段；只有明确标价的购买选项会扣金币。正式调查按按钮标注消耗时段。
       </p>
       <h3>补给与休整</h3>
       <p>
@@ -183,20 +183,22 @@ function nativeClose() {
         }}
       </p>
       <p>你可以冒险一试，也可以寻找安全路线。两种方式都能取得发现。</p>
-      <button class="button primary" @click="resolveEncounter('bold')">
-        冒险通过 · 掷 D6
-      </button>
-      <p>4–6 点平安通过；1–3 点损失 3 生命。</p>
-      <button class="button" @click="resolveEncounter('careful')">
-        谨慎绕行 · 2 时段 + 1 补给
-      </button>
-      <p>
-        {{
-          state.food > 0
-            ? "消耗补给即可安全取得发现。"
-            : "补给已耗尽，谨慎绕行将损失 2 生命。"
-        }}
-      </p></template
+      <div class="encounter-choices">
+        <button class="dialogue-choice" @click="resolveEncounter('bold')">
+          <span>冒险通过 · 掷 D6 →</span>
+          <small>4–6 点平安；1–3 点损失 3 生命。</small>
+        </button>
+        <button class="dialogue-choice" @click="resolveEncounter('careful')">
+          <span>谨慎绕行 →</span>
+          <small>
+            {{
+              state.food > 0
+                ? "花费 2 时段、1 补给，安全取得发现。"
+                : "花费 2 时段；补给已耗尽，将损失 2 生命。"
+            }}
+          </small>
+        </button>
+      </div></template
     >
     <template v-else-if="dialog === 'result'"
       ><div v-if="result?.die" class="result-die">⚄ {{ result.die }}</div>
