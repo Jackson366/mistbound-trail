@@ -8,7 +8,7 @@ Factions derive from castle/tower/abbey, never the starting village. Main expedi
 
 ## 地点场景 — 第二版
 
-User-supplied tavern screenshot is the design reference: large original illustrated stage with clickable people/objects, a right-side narrative and clue log, and a bottom action tray. Keep existing map and expedition rules. Every one of 19 locations has authored atmosphere, two opening paragraphs and 3–5 observations (59 total). Shared scene renderers draw specific objects and NPCs; settlement/biome/feature remain the seeded map's source of truth. Tavern, altar, crypt, tower, abbey and gate are authored landmark scenes, not additional map factions.
+User-supplied tavern screenshot is the design reference: large original illustrated stage with clickable people/objects, a narrative and clue log (moved below the stage by the later vertical-layout instruction), and a bottom action tray. Keep existing map and expedition rules. Every one of 19 locations has authored atmosphere, two opening paragraphs and 3–5 observations (59 total). Shared scene renderers draw specific objects and NPCs; settlement/biome/feature remain the seeded map's source of truth. Tavern, altar, crypt, tower, abbey and gate are authored landmark scenes, not additional map factions.
 
 Arrival opens the scene view; the current tile also has an explicit entry button. Returning to the map costs no resources. Talking and examining record lore and cost no time or supplies. Explicit paid purchases in the conversation revision below use the existing camp exchange rule. The separate formal investigation action invokes the existing explore/encounter flow, exactly once per tile. Core objects reveal their observation; the scene footer owns the formal-investigation action. Pending encounters must be resolved before new observations; completed observations remain readable through the clue recap and full journal. No scene interaction changes faction reputation or adds unimplemented quest requirements.
 
@@ -33,3 +33,7 @@ Conversation history and cursor are optional version-1 save fields. Keep only th
 ## 连续气泡对话
 
 Respond to the user’s request for an actual dialogue-bubble feel. Show recent NPC and player utterances together, with opposing alignment and explicit speaker names. Keep the latest five messages visible and older retained messages available above them. The reply area contains actual available responses; choosing one appends the player’s words and the authored NPC reply. Preserve receipts beside the turn that produced them. Topic continuation should sound like continuing the same conversation, without repeating a greeting. This is a presentation and authored-copy change, with an optional per-turn notice for compatible persistence; existing prices, outcomes and exploration rules do not change.
+
+## 上下分区
+
+The user explicitly requires upper/lower regions and rejects dialogue in a sidebar. At every screen width the upper section is the scene picture; the lower section contains conversation or observation, then scene actions. Keep clues and the current goal available in collapsed disclosures below. Preserve the bubble dialogue, artwork coordinates, free point selection, action costs and save compatibility. Point selection must bring the lower narrative into view on desktop as well as mobile.

@@ -26,13 +26,14 @@ async function focusReply() {
   await nextTick();
   const reply = panel.value?.querySelector<HTMLElement>(".conversation-reply");
   reply?.focus({ preventScroll: true });
-  // Follow the new turn in document flow; do not add an internal chat scroller.
-  if (
-    reply &&
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(max-width: 800px)").matches
-  )
-    reply.scrollIntoView({ block: "nearest", behavior: "instant" });
+  // Both scene and conversation use vertical document flow at every width.
+  reply?.scrollIntoView({ block: "nearest", behavior: "instant" });
+  panel.value
+    ?.querySelector<HTMLElement>(".conversation-composer")
+    ?.scrollIntoView({
+      block: "nearest",
+      behavior: "instant",
+    });
 }
 onMounted(focusReply);
 watch(() => conversation.value?.memory.revision, focusReply);

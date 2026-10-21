@@ -33,14 +33,10 @@ const observationPanel = ref<HTMLElement>();
 watch(activePoint, async (id) => {
   if (!id) return;
   await nextTick();
-  if (
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(max-width: 800px)").matches
-  )
-    observationPanel.value?.scrollIntoView({
-      block: "nearest",
-      behavior: "instant",
-    });
+  observationPanel.value?.scrollIntoView({
+    block: "start",
+    behavior: "instant",
+  });
 });
 const seen = computed(() => new Set(state.value.discoveries || []));
 const pointDisabled = computed(
@@ -93,11 +89,7 @@ onMounted(() => {
 onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
 </script>
 <template>
-  <main
-    id="location-view"
-    :class="{ 'has-conversation': !!conversation }"
-    aria-label="地点场景"
-  >
+  <main id="location-view" aria-label="地点场景">
     <div class="scene-heading">
       <button ref="backButton" class="back-button" @click="leaveScene">
         ← 返回区域地图
@@ -110,7 +102,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
         >已查看 {{ seenCount }} / {{ place.points.length }}</span
       >
     </div>
-    <section class="stage-column" aria-label="场景与行动">
+    <section class="stage-column" aria-label="场景画面">
       <div class="scene-canvas">
         <SceneArt
           id="stage-art"
@@ -142,8 +134,34 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
           </button>
         </div>
       </div>
+    </section>
+    <section class="scene-story-panel" aria-label="对话与行动">
+      <section ref="observationPanel" class="scene-narrative">
+        <div class="section-title">
+          <span>{{
+            conversation ? "人物交谈" : observation ? "查看结果" : "地点见闻"
+          }}</span
+          ><button v-if="observation" class="text-button" @click="showIntro">
+            地点介绍
+          </button>
+        </div>
+        <ConversationPanel v-if="conversation" :key="conversation.id" />
+        <article v-else-if="observation" class="observation" aria-live="polite">
+          <span class="observation-type">{{ observation.label }}</span>
+          <h2>{{ observation.title }}</h2>
+          <p>{{ observation.text }}</p>
+          <div v-if="observation.clue" class="clue-found">
+            ✦ {{ observation.clue }}
+          </div>
+        </article>
+        <template v-else
+          ><p v-for="(text, i) in place.intro" :key="i" class="scene-prose">
+            {{ text }}
+          </p></template
+        >
+      </section>
       <div class="stage-action-tray">
-        <div class="interaction-hint">
+        <div v-if="!observation" class="interaction-hint">
           <span>点击人物或物件，了解这里的故事。</span
           ><small>查看免费 · 支持数字键 1–5</small>
         </div>
@@ -219,32 +237,6 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
           </div>
         </div>
       </div>
-    </section>
-    <aside class="scene-story-panel" aria-label="场景见闻与线索">
-      <section ref="observationPanel" class="scene-narrative">
-        <div class="section-title">
-          <span>{{
-            conversation ? "人物交谈" : observation ? "查看结果" : "地点见闻"
-          }}</span
-          ><button v-if="observation" class="text-button" @click="showIntro">
-            地点介绍
-          </button>
-        </div>
-        <ConversationPanel v-if="conversation" :key="conversation.id" />
-        <article v-else-if="observation" class="observation" aria-live="polite">
-          <span class="observation-type">{{ observation.label }}</span>
-          <h2>{{ observation.title }}</h2>
-          <p>{{ observation.text }}</p>
-          <div v-if="observation.clue" class="clue-found">
-            ✦ {{ observation.clue }}
-          </div>
-        </article>
-        <template v-else
-          ><p v-for="(text, i) in place.intro" :key="i" class="scene-prose">
-            {{ text }}
-          </p></template
-        >
-      </section>
       <details class="scene-clues">
         <summary>
           已记录的线索
@@ -266,7 +258,12 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
           与人物交谈或查看物件，新的线索会记在这里。
         </p>
       </details>
-      <GameObjective />
-    </aside>
+      <details class="scene-goal">
+        <summary>
+          远征目标 <span>{{ state.sigils }} / 3 枚印记</span>
+        </summary>
+        <GameObjective />
+      </details>
+    </section>
   </main>
 </template>

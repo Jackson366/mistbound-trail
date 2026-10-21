@@ -77,6 +77,16 @@ test("Vue UI renders map, enters a scene, inspects lore and returns without losi
   assert.equal(wrapper.findAll(".location-panel .button").length, 1);
   await clickText(wrapper, "进入地点场景 ↗");
   assert.ok(wrapper.find("#location-view").exists());
+  assert.equal(wrapper.findAll("#location-view aside").length, 0);
+  assert.ok(wrapper.find('.stage-column[aria-label="场景画面"]').exists());
+  assert.ok(
+    wrapper
+      .find('.scene-story-panel[aria-label="对话与行动"] .scene-narrative')
+      .exists(),
+  );
+  assert.equal(wrapper.findAll(".stage-column #stage-actions").length, 0);
+  assert.equal(wrapper.findAll(".scene-story-panel #stage-actions").length, 1);
+  assert.equal(wrapper.get(".scene-goal").attributes("open"), undefined);
   assert.equal(wrapper.findAll(".scene-hotspot").length, 5);
   assert.equal(wrapper.findAll('[aria-label="角色状态"]').length, 1);
   assert.equal(wrapper.get(".scene-object-list").attributes("open"), undefined);
