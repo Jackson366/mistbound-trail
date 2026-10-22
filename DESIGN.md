@@ -87,3 +87,7 @@ Scene artwork is owned by src/rendering/scene-art.ts; authored people and clues 
 - Do keep exploration and movement separate actions.
 - Don't reveal hidden contents before reaching a location.
 - Don't require hover or color alone to understand the map.
+
+## Exploration feedback revision
+
+The 2026-10-22 gameplay revision keeps the slate/forest/brass identity and the upper scene / lower conversation layout. The scene heading now invites free observation instead of prompting full hotspot completion; the clue disclosure reports recorded entries without a total. Evidence-based encounter choices reuse the existing full-width choice primitive, with visible costs, missing clues and a disabled state. The village primary action leads to Oren when all three sigils are held. No palette, typography, spacing or token ownership changes.

@@ -7,6 +7,7 @@ import type {
   SceneKind,
   Tile,
 } from "../types";
+import { aftermathFor } from "./expedition";
 export const profiles: LocationProfile[] = [
   {
     title: "烛溪村 · 鹿灯酒馆",
@@ -85,7 +86,7 @@ export const profiles: LocationProfile[] = [
         30,
         39,
         "朝向北方的刻痕",
-        "三道刀痕旁刻着很小的星形。最后一道还露着浅白木色，像有人不久前才替后来的旅人留下方向。",
+        "三道短刀痕围着一枚星形，短纹朝向烛溪村，长纹指向祭坛。旁边新刻了一句：“让星盘的短纹朝向归乡的路。”你记下这个方向。",
         "松林的星形路标",
       ],
       [
@@ -95,7 +96,7 @@ export const profiles: LocationProfile[] = [
         73,
         44,
         "被枝条留下的东西",
-        "围巾没有撕裂，末端系着干燥的苦艾。它不像逃跑时遗失的，更像猎人用来标记安全歇脚处的记号。",
+        "围巾没有撕裂，末端系着干燥的苦艾。它标记着背风的歇脚处。认得这记号后，在灰松林或野鹿营地扎营，同样花费 1 补给、2 时段，可恢复 6 点生命。",
         "苦艾的标记",
       ],
       [
@@ -331,7 +332,7 @@ export const profiles: LocationProfile[] = [
         29,
         36,
         "写给归来者的句子",
-        "星文不是咒语，而是一句嘱托：“携光的人，记得回家。”字迹在你的影子经过时短暂亮起。",
+        "星文不是咒语，而是一句嘱托：“携光的人，记得回家。”下一行在影子下亮起：“三道短纹朝向来路，星盘便与归人相合。”",
         "祭坛的归途誓言",
       ],
       [
@@ -536,7 +537,7 @@ export const profiles: LocationProfile[] = [
         27,
         40,
         "王旗之外的人",
-        "浮雕里的队伍没有军队，只有背着行李的村民。王冠放在最后一辆车上，没有人回头看它。",
+        "浮雕里的队伍没有军队，只有背着行李的村民。每个人都先把一枚铜币放回石像的盘中，再向门外退开一步。王冠留在最后一辆车上，没有人回头。",
         "没有王旗的送行",
       ],
       [
@@ -546,7 +547,7 @@ export const profiles: LocationProfile[] = [
         75,
         38,
         "交还的姿态",
-        "石盘中央刻着三瓣星。它没有抓紧任何东西，而是在把掌中之物送向门外。",
+        "石盘中央刻着三瓣星，边缘磨出铜币大小的浅痕。它没有抓紧任何东西，而是在把掌中之物送向门外。盘下刻着：“归还者，可以通行。”",
         "石像的归还之意",
       ],
       [
@@ -710,7 +711,7 @@ export const profiles: LocationProfile[] = [
         74,
         38,
         "只在暗处显现的墨迹",
-        "你把书移离月光，纸上才浮出淡淡的字：“不要把所有答案带走。给后来的人留一盏灯。”",
+        "你把书移离月光，纸上才浮出淡淡的字：“三转一停，停时取星。”页脚还有一句：“不要把所有答案带走。给后来的人留一盏灯。”",
         "暗处的字迹",
       ],
       [
@@ -720,7 +721,7 @@ export const profiles: LocationProfile[] = [
         52,
         47,
         "仍在运转的星仪",
-        "一枚印记镶在星仪的底座里。破损的传动轴不时错位，调查时需要谨慎越过书室中的机关。",
+        "一枚印记镶在星仪的底座里。破损的传动轴每转三次就会停顿，齿轮随即重新咬合。你记下停顿的位置，准备调查时利用这段间隙。",
         "星仪底座的印记",
       ],
     ],
@@ -810,16 +811,18 @@ export const profiles: LocationProfile[] = [
 ];
 export function get(tile: Tile): Place {
   const p = profiles[tile.id];
+  const aftermath = aftermathFor(tile);
   return {
     ...p,
+    intro: aftermath ? [...aftermath] : p.intro,
     points: p.points.map(([id, label, kind, x, y, title, text, clue]) => ({
       id,
       label,
       kind,
       x,
       y,
-      title,
-      text,
+      title: aftermath && kind === "core" ? "印记已取回" : title,
+      text: aftermath && kind === "core" ? aftermath.join("") : text,
       clue,
     })),
     kind:

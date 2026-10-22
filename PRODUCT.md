@@ -37,3 +37,15 @@ Respond to the user’s request for an actual dialogue-bubble feel. Show recent 
 ## 上下分区
 
 The user explicitly requires upper/lower regions and rejects dialogue in a sidebar. At every screen width the upper section is the scene picture; the lower section contains conversation or observation, then scene actions. Keep clues and the current goal available in collapsed disclosures below. Preserve the bubble dialogue, artwork coordinates, free point selection, action costs and save compatibility. Point selection must bring the lower narrative into view on desktop as well as mobile.
+
+## 线索、人物回应与归途 — 第四版
+
+来源：用户在 2026-10-22 明确要求完整落实玩法、NPC 对话、探索节奏三项评审建议。本节替代此前“规则不变”“没有额外解法”“回村立即通关”等旧版约束，保留既有上下布局和本地存档。
+
+- 正式调查仍花费 1 时段。三处印记保留冒险掷骰和谨慎绕行，并新增由观察解锁的独立解法：祭坛需辨认松林或祭坛的归乡刻痕并查看基座，对齐星盘无需额外费用；墓窟需查看浮雕和空盘，归还供物花费 1 金币、1 时段；孤塔需读无字书或询问维恩的墨迹，并查看星仪，等待停顿花费 2 时段、不消耗物资。三者都不受伤，照常获得印记和 4 金币。费用、缺少的证据在提交前显示，规则层重新验证。重复执行不重复收费或发奖。
+- 遭遇允许“先退回查看线索”。撤回不退还已花的调查时段，再次调查仍花费 1 时段；缺线索不造成死锁。时间记录旅程长短，没有倒计时或隐藏惩罚。
+- 查看灰松林苦艾围巾或听艾达讲路标后，在灰松林或野鹿营地休整可恢复最多 6 生命，费用仍为 1 补给、2 时段；其他野外地点仍恢复最多 4 生命。
+- 人物对话支持直接接续另一个话题，每轮含退出最多三项。玛拉的重复购买仍需显式返回商品菜单，保留价格、收据与过期选择防重。奥伦根据实际取回地点回应进展，玛拉欢迎携三印记的归人；未道别的对话在相关旅程状态变化后追加新的回应，普通中断仍原样续聊。
+- 信使的星纹信 → 维恩托付口信 → 回村向信使转达，是可完成且不收费的支线。不会因未完成支线阻止主线结束。手记保存口信进展，结尾按已完成／尚未转达给出不同回应。
+- 三处古迹从辨认方向、理解归还、掌握机关形成不同的行动与信息层次，不强制访问顺序。目标提供轻量的下一段路建议；场景取消“已查看 X/Y”的全清提示，保留热点记录和可回看线索。取回印记后，地点开场与核心物件切换为事后描述。
+- 集齐印记回村保持 playing，允许欢迎、补给与支线对话；必须在奥伦对话中明确选择交还星盘才置为 won。结算回应采用过的线索解法和口信结果。既有 won 存档保持已完成。新字段 insightSites、letterStage 和对话 context 为可选扩展，旧版存档继续有效。

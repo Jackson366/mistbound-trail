@@ -23,6 +23,7 @@ const {
   localClues,
   observation,
   conversation,
+  restRecovery,
   leaveScene,
   observePoint,
   explore,
@@ -42,21 +43,18 @@ const seen = computed(() => new Set(state.value.discoveries || []));
 const pointDisabled = computed(
   () => !playing.value || state.value.pending !== null,
 );
-const seenCount = computed(
-  () =>
-    place.value.points.filter((p) => seen.value.has(key(tile.value.id, p.id)))
-      .length,
-);
 const note = computed(() =>
   !playing.value
     ? "远征已结束，可回看线索或开启新旅程。"
     : state.value.pending !== null
       ? "请先处理遭遇，再继续查看。"
       : tile.value.id === 0
-        ? "补给：3 金币换 4 份。休整：2 时段恢复全部生命。"
+        ? state.value.sigils === 3
+          ? "三枚印记已经齐备。与窗边的奥伦交谈，亲手交还星盘。"
+          : "补给：3 金币换 4 份。休整：2 时段恢复全部生命。"
         : tile.value.searched
-          ? "此地已调查，可继续查看见闻，或返回地图。"
-          : "调查需 1 时段。野外休整需 1 补给、2 时段，恢复 4 生命。",
+          ? `此地已调查。休整需 1 补给、2 时段，恢复 ${restRecovery.value} 生命；也可继续查看见闻或返回地图。`
+          : `调查需 1 时段。野外休整需 1 补给、2 时段，恢复 ${restRecovery.value} 生命${restRecovery.value === 6 ? "（苦艾标记的背风处）" : ""}。`,
 );
 function shortcut(e: KeyboardEvent) {
   if (
@@ -98,9 +96,9 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
         <h1>{{ place.title }}</h1>
         <p>{{ place.air }}</p>
       </div>
-      <span class="scene-visited"
-        >已查看 {{ seenCount }} / {{ place.points.length }}</span
-      >
+      <span class="scene-visited">{{
+        tile.searched && tile.sigil ? "印记已取回" : "自由交谈与观察"
+      }}</span>
     </div>
     <section class="stage-column" aria-label="场景画面">
       <div class="scene-canvas">
@@ -204,9 +202,11 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
               ><button
                 class="button primary"
                 :disabled="!playing"
-                @click="observePoint('mara')"
+                @click="
+                  observePoint(state.sigils === 3 ? 'cartographer' : 'mara')
+                "
               >
-                向玛拉购买补给
+                {{ state.sigils === 3 ? "向奥伦交还星盘" : "向玛拉购买补给" }}
               </button></template
             ><template v-else
               ><button
@@ -219,7 +219,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
                 "
                 @click="perform('rest')"
               >
-                扎营休整</button
+                扎营休整 · 恢复 {{ restRecovery }} 生命</button
               ><button
                 class="button primary"
                 :disabled="!playing || tile.searched"
@@ -240,10 +240,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", shortcut));
       <details class="scene-clues">
         <summary>
           已记录的线索
-          <span
-            >{{ localClues.length }} /
-            {{ place.points.filter((p) => p.clue).length }}</span
-          >
+          <span>{{ localClues.length }} 条见闻</span>
         </summary>
         <button
           v-for="clue in localClues"

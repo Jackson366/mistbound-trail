@@ -6,12 +6,16 @@ const {
   dialog,
   result,
   here,
+  encounter,
+  ending,
+  letterNote,
   allClues,
   playing,
   sceneOpen,
   closeDialog,
   openDialog,
   resolveEncounter,
+  withdrawEncounter,
   continueJourney,
   newExpedition,
 } = useGame();
@@ -32,11 +36,13 @@ const title = computed(() =>
       ? state.value.status === "won"
         ? "星辰，终于归来"
         : "旅程止步于此"
-      : dialog.value === "result"
-        ? result.value?.damage
-          ? "带着伤痕的收获"
-          : "发现已收入行囊"
-        : titles[dialog.value]
+      : dialog.value === "encounter" && encounter.value
+        ? encounter.value.title
+        : dialog.value === "result"
+          ? result.value?.damage
+            ? "带着伤痕的收获"
+            : "发现已收入行囊"
+          : titles[dialog.value]
     : "",
 );
 watch(dialog, async (kind, previous) => {
@@ -90,7 +96,7 @@ function nativeClose() {
     <h2 id="dialog-title">{{ title }}</h2>
     <template v-if="dialog === 'help'"
       ><p>
-        你是一名边境旅人。找回三枚古代印记，并带回地图中央的烛溪村，即可完成远征。
+        你是一名边境旅人。找回三枚古代印记，返回地图中央的烛溪村，向制图师奥伦交还星盘，完成远征。
       </p>
       <h3>移动与调查</h3>
       <p>
@@ -113,6 +119,11 @@ function nativeClose() {
         补给谨慎绕行。无补给时，谨慎绕行损失 2
         生命。两种选择都能取得发现；生命降至 0 则远征结束。
       </p>
+      <p>
+        查看线索还可解锁古迹各自的解法：对齐祭坛星盘、向墓窟石像归还供物、依照暗处文字等待孤塔机关。费用会在选择前列明。也可先退回查看现场；再次调查仍需
+        1 时段。苦艾标记能让灰松林和野鹿营地的扎营恢复提高至 6
+        生命。时间记录旅程长短，没有隐藏倒计时。
+      </p>
       <h3>地图如何生长</h3>
       <p>
         采用 Sandbox Generator
@@ -121,6 +132,7 @@ function nativeClose() {
     >
     <template v-else-if="dialog === 'journal'"
       ><p>每一步选择，都让这片边境多了一段故事。</p>
+      <p v-if="letterNote">{{ letterNote }}</p>
       <div v-for="(entry, i) in state.logs" :key="i" class="log-entry">
         <small>{{ timeLabel(entry.time) }}</small
         >{{ entry.text }}
@@ -171,11 +183,12 @@ function nativeClose() {
     <template v-else-if="dialog === 'encounter'"
       ><p>
         {{
-          here.feature === "dungeon"
+          encounter?.intro ??
+          (here.feature === "dungeon"
             ? "墓窟的守卫在黑暗里苏醒。"
             : here.feature === "tower"
               ? "破损的阶梯与符文机关挡住了去路。"
-              : "荆棘缠绕着古老的石刻，脚下的土地并不稳固。"
+              : "荆棘缠绕着古老的石刻，脚下的土地并不稳固。")
         }}{{
           here.sigil
             ? "你要寻找的印记，就在另一侧。"
@@ -185,11 +198,11 @@ function nativeClose() {
       <p>你可以冒险一试，也可以寻找安全路线。两种方式都能取得发现。</p>
       <div class="encounter-choices">
         <button class="dialogue-choice" @click="resolveEncounter('bold')">
-          <span>冒险通过 · 掷 D6 →</span>
+          <span>{{ encounter?.bold ?? "冒险通过" }} · 掷 D6 →</span>
           <small>4–6 点平安；1–3 点损失 3 生命。</small>
         </button>
         <button class="dialogue-choice" @click="resolveEncounter('careful')">
-          <span>谨慎绕行 →</span>
+          <span>{{ encounter?.careful ?? "谨慎绕行" }} →</span>
           <small>
             {{
               state.food > 0
@@ -198,8 +211,29 @@ function nativeClose() {
             }}
           </small>
         </button>
-      </div></template
-    >
+        <button
+          v-if="encounter"
+          class="dialogue-choice paid-choice"
+          :disabled="!encounter.canInsight"
+          @click="resolveEncounter('insight')"
+        >
+          <span>{{ encounter.insight }} →</span>
+          <small>{{ encounter.cost }} · 不受伤</small>
+          <small v-if="encounter.missing.length"
+            >尚缺：{{ encounter.missing.join("；") }}</small
+          >
+          <small v-else-if="state.gold < encounter.gold"
+            >还差 {{ encounter.gold - state.gold }} 金币</small
+          >
+          <small v-else>你发现的线索让这个方法成为可能。</small>
+        </button>
+      </div>
+      <p>
+        <button class="text-button" @click="withdrawEncounter">
+          先退回查看线索</button
+        ><small> · 已花费的调查时段保留，再次调查需 1 时段。</small>
+      </p>
+    </template>
     <template v-else-if="dialog === 'result'"
       ><div v-if="result?.die" class="result-die">⚄ {{ result.die }}</div>
       <p>{{ result?.message }}</p>
@@ -208,12 +242,11 @@ function nativeClose() {
       </button></template
     >
     <template v-else-if="dialog === 'ending'"
-      ><p>
-        {{
-          state.status === "won"
-            ? "烛溪村的星盘再次亮起。你穿过森林、遗迹与浓雾，将失落的星光带回了家。"
-            : "你的足迹停在了迷雾深处。边境会记住这位旅人，也等待下一次勇敢的出发。"
-        }}
+      ><template v-if="state.status === 'won'"
+        ><p v-for="line in ending" :key="line">{{ line }}</p></template
+      >
+      <p v-else>
+        你的足迹停在了迷雾深处。边境会记住这位旅人，也等待下一次勇敢的出发。
       </p>
       <div class="inventory-row">
         <span>发现地块</span

@@ -1,6 +1,11 @@
-import { characters, openingFor } from "../data/dialogues";
+import {
+  characters,
+  dialogueContext,
+  openingFor,
+  topicReply,
+} from "../data/dialogues";
 import { get, key, observe } from "../data/locations";
-import { act } from "./game";
+import { act, log } from "./game";
 import type { ConversationMemory, GameState } from "../types";
 
 export interface DialogueChoice {
@@ -29,7 +34,15 @@ export function beginConversation(s: GameState, pointId: string) {
   const id = key(s.position, pointId);
   s.conversations ??= {};
   const existing = s.conversations[id];
-  if (existing && existing.node !== "end") return true;
+  const context = dialogueContext(s, id);
+  if (
+    existing &&
+    existing.node !== "end" &&
+    (existing.context === undefined || existing.context === context)
+  ) {
+    existing.context = context;
+    return true;
+  }
   const m: ConversationMemory = existing ?? {
     node: "menu",
     revision: 0,
@@ -38,6 +51,7 @@ export function beginConversation(s: GameState, pointId: string) {
     notice: "",
   };
   m.node = "menu";
+  m.context = context;
   m.notice = "";
   m.revision++;
   append(m, "npc", openingFor(s, id, !!existing));
@@ -50,8 +64,26 @@ export function conversationView(s: GameState, pointId: string) {
     memory = s.conversations?.[id];
   if (!character || !memory) return null;
   const choices: DialogueChoice[] = [];
-  if (memory.node === "menu") {
-    if (id === "0:mara")
+  if (memory.node !== "end" && s.status === "playing") {
+    if (id === "0:cartographer" && s.sigils === 3)
+      choices.push({
+        id: "handover",
+        label: "向奥伦交还星盘，完成远征",
+        utterance: "三枚印记都在这里。我们把归路补全吧。",
+      });
+    if (id === "16:scholar" && s.letterStage === "heard")
+      choices.push({
+        id: "letter",
+        label: "信使还留着那封星纹信",
+        utterance: "酒馆里有封没寄出的信，落款只有星纹。是你写的吗？",
+      });
+    if (id === "0:courier" && s.letterStage === "carrying")
+      choices.push({
+        id: "deliver",
+        label: "转达维恩的归乡口信",
+        utterance: "维恩说，归途的星位已经找到了。他会回来，请你替他留一盏灯。",
+      });
+    if (id === "0:mara" && memory.node === "menu")
       choices.push({
         id: "buy",
         label: "买四份补给",
@@ -59,22 +91,24 @@ export function conversationView(s: GameState, pointId: string) {
         paid: true,
         utterance: "我买四份补给。",
       });
-    character.topics.forEach(([label], i) =>
+    if (id === "0:mara" && memory.node !== "menu") {
       choices.push({
-        id: `topic${i}`,
-        label,
-        detail: memory.topics.includes(i) ? "已聊过 · 可重听" : undefined,
-      }),
-    );
-  } else if (memory.node !== "end") {
-    choices.push({
-      id: "menu",
-      label: id === "0:mara" ? "再看看补给与回程" : "我还想问一件事",
-      utterance:
-        id === "0:mara" ? "我再看看补给，也想问问回程。" : "我还想问一件事。",
-    });
+        id: "menu",
+        label: "再看看补给与回程",
+        utterance: "我再看看补给，也想问问回程。",
+      });
+    } else {
+      const topics = character.topics
+        .map(([label], i) => ({
+          id: `topic${i}`,
+          label,
+          detail: memory.topics.includes(i) ? "已聊过 · 可重听" : undefined,
+        }))
+        .filter((topic) => topic.id !== memory.node);
+      choices.push(...topics.slice(0, 2 - choices.length));
+    }
+    choices.push({ id: "leave", label: "先聊到这里" });
   }
-  if (memory.node !== "end") choices.push({ id: "leave", label: "先聊到这里" });
   return {
     id,
     character,
@@ -107,6 +141,40 @@ export function chooseDialogue(
   if (choiceId === "leave") {
     m.node = "end";
     append(m, "npc", c.goodbye);
+  } else if (choiceId === "handover") {
+    const result = act(s, "finish");
+    if (!result.ok) return result;
+    m.node = "end";
+    m.notice = result.message;
+    append(
+      m,
+      "npc",
+      "这一次，地图终于有了终点。你带回的不只是三处星光，还有通往家门的路。",
+    );
+  } else if (choiceId === "letter") {
+    s.letterStage = "carrying";
+    m.node = "story";
+    m.notice = log(
+      s,
+      "维恩托你给信使带话：归途的星位已经找到，他会回村，请替他留灯。",
+    );
+    append(
+      m,
+      "npc",
+      "他还留着？那是我答应回去的日子。替我告诉他：归途的星位已经找到了，我会回村。这次，请他替我留灯。",
+    );
+  } else if (choiceId === "deliver") {
+    s.letterStage = "delivered";
+    m.node = "story";
+    m.notice = log(
+      s,
+      "你把维恩的口信带给信使。未寄出的信终于收起，村门将多一盏归人的灯。",
+    );
+    append(
+      m,
+      "npc",
+      "他总算肯说回来了。信不必再寄了……谢谢你。今夜我会在门外添一盏灯。",
+    );
   } else if (choiceId === "menu") {
     m.node = "menu";
     append(m, "npc", c.followUp);
@@ -122,6 +190,10 @@ export function chooseDialogue(
     }
   } else {
     const index = Number(choiceId.slice(-1));
+    if (id === "0:courier" && index === 1 && s.letterStage === undefined) {
+      s.letterStage = "heard";
+      m.notice = log(s, "信使留着一封没有寄出的星纹信。可以到孤塔向维恩问起。");
+    }
     m.node = index === 0 ? "topic0" : "topic1";
     if (!m.topics.includes(index)) m.topics.push(index);
     if (index === 0) {
@@ -129,8 +201,9 @@ export function chooseDialogue(
       if (found.ok && found.fresh && found.point.clue)
         m.notice = `线索已记录：${found.point.clue}`;
     }
-    append(m, "npc", c.topics[index][1]);
+    append(m, "npc", topicReply(s, id, index));
   }
+  m.context = dialogueContext(s, id);
   // Keep receipts attached to their original turn when later replies arrive.
   const lastTurn = m.history.at(-1);
   if (lastTurn && m.notice) lastTurn.notice = m.notice;
