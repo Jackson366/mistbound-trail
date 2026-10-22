@@ -85,6 +85,8 @@ test("a complete expedition can recover all sigils and return to camp", () => {
       for (const id of path(0)) assert.ok(G.act(s, "move", id).ok);
     }
     assert.equal(s.sigils, 3);
+    assert.equal(s.status, "playing");
+    assert.ok(G.act(s, "finish").ok);
     assert.equal(s.status, "won");
     assert.ok(G.validate(s));
   }

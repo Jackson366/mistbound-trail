@@ -1,4 +1,5 @@
 import { validConversations } from "./conversation-memory";
+import { encounterFor, shelteredRest } from "../data/expedition";
 import type {
   Action,
   ActionResult,
@@ -213,9 +214,6 @@ export function check(s: GameState): void {
     s.hp = 0;
     s.status = "lost";
     log(s, "你倒在迷雾中，远征就此结束。");
-  } else if (s.position === 0 && s.sigils === 3) {
-    s.status = "won";
-    log(s, "三枚印记归位。星盘亮起，你带回了灰松谷的星光。");
   }
 }
 export function consume(s: GameState): void {
@@ -230,7 +228,7 @@ export function act(
   if (s.status !== "playing")
     return { ok: false, message: "这次远征已经结束，可以开启新旅程。" };
   const here = s.tiles[s.position];
-  if (s.pending && action !== "resolve")
+  if (s.pending !== null && action !== "resolve" && action !== "withdraw")
     return { ok: false, message: "先处理此地的遭遇，或稍后再决定。" };
   let message = "";
   if (action === "move") {
@@ -271,11 +269,27 @@ export function act(
       }
     }
   } else if (action === "resolve") {
-    if (s.pending !== here.id || !(arg === "bold" || arg === "careful"))
+    if (
+      s.pending !== here.id ||
+      !(arg === "bold" || arg === "careful" || arg === "insight")
+    )
       return { ok: false, message: "当前没有待处理的遭遇。" };
+    const encounter = encounterFor(s);
+    if (arg === "insight" && !encounter?.canInsight)
+      return {
+        ok: false,
+        message: encounter?.missing.length
+          ? "还需要查看线索，才能理解这种解法。"
+          : "这种解法暂不可用，请检查金币或选择其他方式。",
+      };
     let die = null,
       damage = 0;
-    if (arg === "careful") {
+    if (arg === "insight" && encounter) {
+      s.time += encounter.time;
+      s.gold -= encounter.gold;
+      s.insightSites ??= [];
+      s.insightSites.push(here.id);
+    } else if (arg === "careful") {
       s.time += 2;
       if (s.food > 0) s.food--;
       else damage = 2;
@@ -294,10 +308,18 @@ export function act(
     }
     message = log(
       s,
-      `${arg === "bold" ? `掷出 ${die} 点` : "谨慎绕行"}，${here.sigil ? "取回一枚古代印记，金币 +4" : "取得遗留财物，金币 +6"}${damage ? `，生命 -${damage}` : "，平安无伤"}。`,
+      `${arg === "insight" ? encounter!.outcome : arg === "bold" ? `掷出 ${die} 点` : (encounter?.careful ?? "谨慎绕行")}，${here.sigil ? "取回一枚古代印记，金币 +4" : "取得遗留财物，金币 +6"}${arg === "insight" && encounter!.gold ? `，供物金币 −${encounter!.gold}` : ""}${damage ? `，生命 -${damage}` : "，平安无伤"}。`,
     );
     check(s);
     return { ok: true, message, die, damage };
+  } else if (action === "withdraw") {
+    if (s.pending !== here.id)
+      return { ok: false, message: "当前没有待处理的遭遇。" };
+    s.pending = null;
+    message = log(
+      s,
+      "你退回安全处，准备重新查看线索。此前调查花费的时段仍计入旅程，再次调查需 1 时段。",
+    );
   } else if (action === "rest") {
     if (s.hp === 12) return { ok: false, message: "生命已满，无需休整。" };
     if (here.id !== 0 && s.food < 1)
@@ -306,13 +328,26 @@ export function act(
     if (here.id === 0) s.hp = 12;
     else {
       s.food--;
-      s.hp = Math.min(12, s.hp + 4);
+      s.hp = Math.min(12, s.hp + (shelteredRest(s) ? 6 : 4));
     }
     message = log(
       s,
       here.id === 0
         ? "在村中安睡，生命恢复至 12。"
-        : "扎营休整，补给 -1，恢复最多 4 点生命。",
+        : shelteredRest(s)
+          ? "你依照苦艾标记找到背风处，补给 -1，恢复最多 6 点生命。"
+          : "扎营休整，补给 -1，恢复最多 4 点生命。",
+    );
+  } else if (action === "finish") {
+    if (here.id !== 0 || s.sigils !== 3)
+      return {
+        ok: false,
+        message: "请集齐三枚印记，返回烛溪村后向奥伦交还星盘。",
+      };
+    s.status = "won";
+    message = log(
+      s,
+      "你亲手向奥伦交还星盘。三枚印记归位，星光照亮了回家的路。",
     );
   } else if (action === "buy") {
     if (here.id !== 0 || s.gold < 3)
@@ -378,6 +413,20 @@ export function validate(value: unknown): value is GameState {
         (k) =>
           typeof k !== "string" || !/^(?:[0-9]|1[0-8]):[a-z]{1,20}$/.test(k),
       ))
+  )
+    return false;
+  if (
+    s.insightSites !== undefined &&
+    (!Array.isArray(s.insightSites) ||
+      new Set(s.insightSites).size !== s.insightSites.length ||
+      s.insightSites.some(
+        (id) => ![7, 12, 16].includes(id) || !s.tiles[id]?.searched,
+      ))
+  )
+    return false;
+  if (
+    s.letterStage !== undefined &&
+    !["heard", "carrying", "delivered"].includes(s.letterStage)
   )
     return false;
   const expected = generate(s.seed);

@@ -20,7 +20,7 @@ export const characters: Record<string, Character> = {
     topics: [
       [
         "回程该留多少补给？",
-        "每走一格要一份，回程有几格就至少留几份；谨慎绕行和野外休整也会用到。别把最后一份吃完才往回走。还需要补给吗？",
+        "每走一格要一份，回程有几格就至少留几份；谨慎绕行和野外休整也会用到。别把最后一份吃完才往回走。",
       ],
     ],
   },
@@ -34,11 +34,11 @@ export const characters: Record<string, Character> = {
     topics: [
       [
         "三枚印记在哪里？",
-        "沉星祭坛、旧王墓窟、无灯孤塔，各存一枚。先走相邻地块揭开迷雾，到地方再调查。还想问归程吗？",
+        "沉星祭坛、旧王墓窟、无灯孤塔，各存一枚。先走相邻地块揭开迷雾，到地方再调查。",
       ],
       [
         "找到印记后该做什么？",
-        "找齐三枚，带回地图中央的烛溪村，星盘就能完整。一路先留足回程的干粮。还要重看三处位置吗？",
+        "找齐三枚，带回地图中央的烛溪村，再亲手把星盘交给我，我们就能一起补全归路。一路先留足回程的干粮。",
       ],
     ],
   },
@@ -52,11 +52,11 @@ export const characters: Record<string, Character> = {
     topics: [
       [
         "学者为什么不点灯？",
-        "他说墨水会记住影子，书也别随意挪动。我只管送信，解释得再多也不懂。你还想问那封信吗？",
+        "他说墨水会记住影子，书也别随意挪动。我只管送信，解释得再多也不懂。",
       ],
       [
         "信为什么没有寄出？",
-        "落款只有一枚星纹，没有名字。我等一个认得它的人，暂时还没等到。要听听孤塔里的学者吗？",
+        "落款只有一枚星纹，没有名字。我等一个认得它的人，暂时还没等到。",
       ],
     ],
   },
@@ -70,11 +70,11 @@ export const characters: Record<string, Character> = {
     topics: [
       [
         "名册记录了什么人？",
-        "每一个借宿的人，不论身份。历史总偏爱王的名字，可道路是普通人走出来的。还想听彩窗的故事吗？",
+        "每一个借宿的人，不论身份。历史总偏爱王的名字，可道路是普通人走出来的。",
       ],
       [
         "彩窗为什么缺了三瓣？",
-        "那图案比修道院更古老，三处古迹各自保存了一部分。我记下传说，却不能替你证实。要再看看名册吗？",
+        "那图案比修道院更古老，三处古迹各自保存了一部分。我记下传说，却不能替你证实。",
       ],
     ],
   },
@@ -88,11 +88,11 @@ export const characters: Record<string, Character> = {
     topics: [
       [
         "过关有什么规矩？",
-        "收好武器，别挡归人的路。我们守道路，不守王位；从墓窟回来的人，最好先回村歇一歇。还想问旧旗吗？",
+        "收好武器，别挡归人的路。我们守道路，不守王位；从墓窟回来的人，最好先回村歇一歇。",
       ],
       [
         "为什么换掉旧王旗？",
-        "王位空了，道路还得有人守。旧布能用便留下，王冠却不必再挂着。要听听过关的规矩吗？",
+        "王位空了，道路还得有人守。旧布能用便留下，王冠却不必再挂着。",
       ],
     ],
   },
@@ -106,11 +106,11 @@ export const characters: Record<string, Character> = {
     topics: [
       [
         "三枚印记有什么用？",
-        "它们不是武器，也不预言谁会成为王。三部分记录的是同一条回家的航线。还想知道为什么不点灯吗？",
+        "它们不是武器，也不预言谁会成为王。三部分记录的是同一条回家的航线。",
       ],
       [
         "为什么不用灯看书？",
-        "有些墨迹只在暗处显现，灯亮了，字反而消失。把书留在原处就好。还要谈谈印记吗？",
+        "有些墨迹只在暗处显现，灯亮了，字反而消失。把书留在原处就好。",
       ],
     ],
   },
@@ -124,20 +124,73 @@ export const characters: Record<string, Character> = {
     topics: [
       [
         "苦艾路标是什么意思？",
-        "挂苦艾的地方能避风，可以停一停。记住安全的地方，比只记着危险有用。还想问扎营吗？",
+        "挂苦艾的地方能避风，可以停一停。记住安全的地方，比只记着危险有用。",
       ],
       [
         "在野外休整要留什么？",
-        "留一份补给，再留两段时间，能养回四点生命。路标只是提醒，休整还得你自己决定。要再认认苦艾吗？",
+        "留一份补给，再留两段时间，能养回四点生命。路标只是提醒，休整还得你自己决定。",
       ],
     ],
   },
 };
 
 export function openingFor(s: GameState, id: string, returning: boolean) {
+  if (id === "0:mara" && s.sigils === 3)
+    return "三处星光都在你行囊里了。先坐下喝口热汤，奥伦一直在窗边等你。";
+  if (id === "0:courier" && s.letterStage === "carrying")
+    return "你从孤塔回来了。维恩……有没有提起过这封信？";
+  if (id === "0:courier" && s.letterStage === "delivered")
+    return "信已经收好了。谢谢你把他的话带回来，今夜我会替他留灯。";
+  if (id === "16:scholar" && s.letterStage === "heard")
+    return "你看着我袖口的星纹，像是有什么话想问。村里有人还认得这个记号？";
   if (id === "0:cartographer" && s.sigils > 0)
-    return `你带回了 ${s.sigils} 枚印记。${s.sigils < 3 ? `还差 ${3 - s.sigils} 枚，想确认位置，还是归程？` : "三处星光终于相聚。想重看位置，还是再听听归程？"}`;
+    return `你带回了 ${s.sigils} 枚印记。${
+      s.sigils < 3
+        ? `我把${s.tiles
+            .filter((t) => t.sigil && t.searched)
+            .map((t) => t.name)
+            .join(
+              "、",
+            )}标在图上了。还差 ${3 - s.sigils} 枚，我们看看接下来的路。`
+        : "三处星光终于相聚。把星盘放到这里吧，这段归路该由你亲手补全。"
+    }`;
   if (id === "0:mara" && s.food === 0)
     return "行囊里连干粮都空了？三枚金币能换四份。先补给，还是商量回程？";
   return returning ? characters[id].returning : characters[id].opening;
+}
+
+export function dialogueContext(s: GameState, id: string) {
+  if (id === "0:cartographer")
+    return `${s.sigils}:${s.tiles
+      .filter((t) => t.sigil && t.searched)
+      .map((t) => t.id)
+      .join(",")}`;
+  if (id === "0:mara") return `${s.sigils}:${s.food === 0}`;
+  if (id === "0:courier" || id === "16:scholar")
+    return s.letterStage ?? "unknown";
+  return "local";
+}
+
+export function topicReply(s: GameState, id: string, index: number) {
+  if (id === "0:cartographer" && index === 0 && s.sigils > 0) {
+    const remaining = s.tiles
+      .filter((t) => t.sigil && !t.searched)
+      .map((t) => t.name);
+    return remaining.length
+      ? `已经取回的星位我都记下了。还要去${remaining.join("、")}。你愿意先走哪一处，就先把那段路留在图上。`
+      : "三处星位已经齐了。把星盘交给我，我们一起补上通往村灯的最后一笔。";
+  }
+  if (id === "0:cartographer" && index === 1 && s.sigils === 3)
+    return "你已经回到烛溪村了。等你准备好，把星盘放在这张图中央，这次远征就算完成。";
+  if (id === "0:courier" && index === 1 && s.letterStage === "delivered")
+    return "它不必再寄出去了。你带回的话，比纸上的落款更清楚。我会在门外留一盏灯。";
+  if (id === "16:scholar" && index === 1)
+    return "有些墨迹只在暗处显现，灯亮了，字反而消失。书上写着“三转一停，停时取星”。先看看中央星仪，你就能认出那段间隙。";
+  if (id === "18:hunter" && index === 0)
+    return "挂苦艾的地方能避风。认得它之后，在灰松林或这座营地扎营，花一份补给、两段时间，能恢复六点生命。记住安全的地方，比只记着危险有用。";
+  if (id === "18:hunter" && index === 1)
+    return "野外歇脚要留一份补给、两段时间，一般能恢复四点生命。认得苦艾以后，在灰松林或这里的背风处就能恢复六点。";
+  if (id === "14:captain" && index === 0 && s.tiles[12].searched)
+    return "这枚印记上的墓尘还没擦净。你已经走过旧王墓窟了。路仍开着，顺着村灯的方向走，归人不必再向旧王报到。";
+  return characters[id].topics[index][1];
 }

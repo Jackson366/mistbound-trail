@@ -18,7 +18,11 @@ export function validConversations(value: unknown): boolean {
         return false;
       const m = raw as ConversationMemory;
       return (
-        ["menu", "topic0", "topic1", "receipt", "end"].includes(m.node) &&
+        ["menu", "topic0", "topic1", "receipt", "story", "end"].includes(
+          m.node,
+        ) &&
+        (m.context === undefined ||
+          (typeof m.context === "string" && m.context.length < 100)) &&
         (m.node !== "receipt" || id === "0:mara") &&
         (m.node !== "topic1" || characters[id].topics.length > 1) &&
         Number.isInteger(m.revision) &&

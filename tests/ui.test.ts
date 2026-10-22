@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { JSDOM } from "jsdom";
 import type { Component } from "vue";
 import { create } from "../src/engine/game";
+import { act } from "../src/engine/game";
 // In-memory DOM tests: no browser, preview server or network navigation.
 const dom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "https://mistbound.test/",
@@ -272,6 +273,96 @@ test("Vue dialogue shortage stays inline, retains an exit and supports scene sho
     wrapper
       .findAll(".dialogue-choice")
       .some((b) => b.text().includes("先聊到这里")),
+  );
+  wrapper.unmount();
+});
+
+test("landmark UI exposes missing evidence, withdraws safely and resolves the unlocked local action", async () => {
+  const s = create(17);
+  s.position = 7;
+  s.selected = 7;
+  s.tiles[7].visible = true;
+  win.localStorage.setItem("mistbound-expedition-v1", JSON.stringify(s));
+  const wrapper = mount(App, { attachTo: win.document.body });
+  await clickText(wrapper, "进入地点场景 ↗");
+  await clickText(wrapper, "调查此地 · 1 时段");
+  assert.match(wrapper.get("dialog").text(), /祭坛 · 找到归乡的星位/);
+  const insight = () =>
+    wrapper
+      .findAll("dialog .dialogue-choice")
+      .find((b) => b.text().includes("沿归乡刻痕"))!;
+  assert.ok(insight().attributes("disabled") !== undefined);
+  assert.match(insight().text(), /尚缺/);
+  await clickText(wrapper, "先退回查看线索");
+  assert.equal(wrapper.get("dialog").attributes("open"), undefined);
+  const clickPoint = async (label: string) => {
+    await wrapper
+      .findAll(".scene-hotspot")
+      .find((b) => b.text().includes(label))!
+      .trigger("click");
+    await flushPromises();
+  };
+  await clickPoint("残缺星文");
+  await clickPoint("星盘基座");
+  await clickText(wrapper, "调查此地 · 1 时段");
+  assert.equal(insight().attributes("disabled"), undefined);
+  assert.match(insight().text(), /不额外消耗时段.*不消耗物资/);
+  await insight().trigger("click");
+  await flushPromises();
+  assert.match(wrapper.get("dialog").text(), /星盘与凹槽/);
+  await clickText(wrapper, "继续旅程");
+  await clickPoint("星盘基座");
+  assert.match(wrapper.get(".observation").text(), /印记已取回/);
+  const saved = JSON.parse(
+    win.localStorage.getItem("mistbound-expedition-v1")!,
+  );
+  assert.deepEqual(saved.insightSites, [7]);
+  assert.equal(saved.time, 2);
+  wrapper.unmount();
+});
+
+test("return UI welcomes the traveller, handover opens a personal ending and persists terminal state", async () => {
+  const s = create(19);
+  for (const id of [7, 12, 16]) s.tiles[id].searched = true;
+  s.sigils = 3;
+  s.insightSites = [7, 12, 16];
+  s.letterStage = "delivered";
+  s.position = 1;
+  act(s, "move", 0);
+  win.localStorage.setItem("mistbound-expedition-v1", JSON.stringify(s));
+  const wrapper = mount(App, { attachTo: win.document.body });
+  assert.match(wrapper.get(".objective").text(), /向奥伦交还星盘/);
+  assert.equal(wrapper.get("dialog").attributes("open"), undefined);
+  await clickText(wrapper, "进入地点场景 ↗");
+  await wrapper
+    .findAll(".scene-hotspot")
+    .find((b) => b.text().includes("玛拉"))!
+    .trigger("click");
+  await flushPromises();
+  assert.match(wrapper.get(".conversation-reply").text(), /热汤/);
+  await clickText(wrapper, "向奥伦交还星盘");
+  assert.match(wrapper.get(".conversation-reply").text(), /亲手补全/);
+  const handover = wrapper
+    .findAll(".dialogue-choice")
+    .find((b) => b.text().includes("完成远征"))!;
+  await handover.trigger("click");
+  await flushPromises();
+  assert.match(wrapper.get("dialog").text(), /有 3 处古迹/);
+  assert.match(wrapper.get("dialog").text(), /信使终于/);
+  assert.equal(
+    JSON.parse(win.localStorage.getItem("mistbound-expedition-v1")!).status,
+    "won",
+  );
+  await clickText(wrapper, "×");
+  assert.equal(wrapper.findAll(".conversation .dialogue-choice").length, 0);
+  assert.ok(
+    !wrapper
+      .findAll("button")
+      .some(
+        (b) =>
+          b.element === win.document.activeElement &&
+          b.attributes("disabled") !== undefined,
+      ),
   );
   wrapper.unmount();
 });

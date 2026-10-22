@@ -1,15 +1,10 @@
 export type Biome = "plain" | "forest" | "hill" | "marsh" | "mountain";
 export type Feature =
-  | "landmark"
-  | "settlement"
-  | "lair"
-  | "dungeon"
-  | "tower"
-  | "abbey"
-  | "castle";
+  "landmark" | "settlement" | "lair" | "dungeon" | "tower" | "abbey" | "castle";
 export type Content = "camp" | "hazard" | "empty" | "special" | "monster";
-export type Action = "move" | "explore" | "resolve" | "rest" | "buy";
-export type ResolveMode = "bold" | "careful";
+export type Action =
+  "move" | "explore" | "resolve" | "withdraw" | "rest" | "buy" | "finish";
+export type ResolveMode = "bold" | "careful" | "insight";
 export interface Coordinate {
   q: number;
   r: number;
@@ -48,6 +43,8 @@ export interface GameState {
   pending: number | null;
   discoveries?: string[];
   conversations?: Record<string, ConversationMemory>;
+  insightSites?: number[];
+  letterStage?: "heard" | "carrying" | "delivered";
   logs: LogEntry[];
 }
 export interface DialogueTurn {
@@ -56,7 +53,8 @@ export interface DialogueTurn {
   notice?: string;
 }
 export interface ConversationMemory {
-  node: "menu" | "topic0" | "topic1" | "receipt" | "end";
+  node: "menu" | "topic0" | "topic1" | "receipt" | "story" | "end";
+  context?: string;
   revision: number;
   topics: number[];
   history: DialogueTurn[];

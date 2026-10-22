@@ -31,9 +31,11 @@ test("all seven NPCs provide bounded choices and first-topic clues exactly once,
     assert.ok(choose(s, point, "topic0").ok);
     const logs = s.logs.length;
     assert.deepEqual(s.discoveries, [id]);
-    assert.ok(choose(s, point, "menu").ok);
+    assert.ok(choose(s, point, id === "0:mara" ? "menu" : "topic1").ok);
+    const afterOtherTopic = s.logs.length;
     assert.ok(choose(s, point, "topic0").ok);
-    assert.equal(s.logs.length, logs);
+    assert.equal(s.logs.length, afterOtherTopic);
+    assert.ok(afterOtherTopic >= logs);
     assert.deepEqual([s.hp, s.food, s.gold, s.time, s.randomState], resources);
     assert.ok(validate(s));
   }
@@ -108,8 +110,8 @@ test("interrupted conversations resume exactly; explicit endings receive a short
     /地图还在这里/,
   );
   for (let i = 0; i < 20; i++) {
-    choose(reloaded, "cartographer", "topic0");
-    choose(reloaded, "cartographer", "menu");
+    assert.ok(choose(reloaded, "cartographer", "topic0").ok);
+    assert.ok(choose(reloaded, "cartographer", "topic1").ok);
   }
   assert.ok(reloaded.conversations!["0:cartographer"].history.length <= 12);
   assert.ok(validate(reloaded));

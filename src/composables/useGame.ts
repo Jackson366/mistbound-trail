@@ -12,6 +12,12 @@ import * as engine from "../engine/game";
 import * as locations from "../data/locations";
 import * as conversations from "../engine/conversation";
 import {
+  encounterFor,
+  endingFor,
+  letterNoteFor,
+  shelteredRest,
+} from "../data/expedition";
+import {
   loadGame,
   saveGame,
   SAVE_KEY,
@@ -51,6 +57,10 @@ export function createGameController(storage?: SaveStorage) {
   const selected = computed(() => state.value.tiles[state.value.selected]);
   const place = computed(() => locations.get(here.value));
   const currentTime = computed(() => clock(state.value.time));
+  const encounter = computed(() => encounterFor(state.value));
+  const ending = computed(() => endingFor(state.value));
+  const letterNote = computed(() => letterNoteFor(state.value));
+  const restRecovery = computed(() => (shelteredRest(state.value) ? 6 : 4));
   const allClues = computed(() => locations.clues(state.value));
   const localClues = computed(() =>
     locations.clues(state.value, state.value.position),
@@ -157,8 +167,10 @@ export function createGameController(storage?: SaveStorage) {
       choiceId,
       revision,
     );
-    if (outcome.ok) persist();
-    else announce(outcome.message);
+    if (outcome.ok) {
+      persist();
+      if (state.value.status === "won") dialog.value = "ending";
+    } else announce(outcome.message);
   }
   function resolveEncounter(mode: ResolveMode) {
     if (conflict) {
@@ -176,6 +188,10 @@ export function createGameController(storage?: SaveStorage) {
   }
   function continueJourney() {
     dialog.value = playing.value ? null : "ending";
+  }
+  function withdrawEncounter() {
+    perform("withdraw");
+    if (state.value.pending === null) dialog.value = null;
   }
   function newExpedition() {
     const seed = new Uint32Array(1);
@@ -215,6 +231,10 @@ export function createGameController(storage?: SaveStorage) {
     selected,
     place,
     currentTime,
+    encounter,
+    ending,
+    letterNote,
+    restRecovery,
     allClues,
     localClues,
     observation,
@@ -230,6 +250,7 @@ export function createGameController(storage?: SaveStorage) {
     observePoint,
     chooseDialogue,
     resolveEncounter,
+    withdrawEncounter,
     continueJourney,
     newExpedition,
     storageChanged,
